@@ -1,36 +1,30 @@
-/**
- * Sub-Store 远程脚本 - 节点名称添加前缀
- * 
- * 参数编辑中配置:
- *   key:   prefix
- *   value: 🇯🇵  (或任意前缀)
- * 
- * 留空则不修改节点名
- */
-
-function operator(proxies = [], targetPlatform, context) {
+async function operator(proxies, targetPlatform, context) {
+  let prefix = "";
   try {
-    let prefix = "";
-
-    // 解析参数：$arguments 是字符串形式的 JSON 或直接字符串
     if (typeof $arguments !== "undefined" && $arguments) {
-      try {
-        const args = JSON.parse($arguments);
-        prefix = args.prefix || "";
-      } catch {
-        prefix = String($arguments);
+      // 如果是对象，直接取 prefix 属性
+      if (typeof $arguments === "object" && $arguments.prefix) {
+        prefix = String($arguments.prefix);
+      } else if (typeof $arguments === "string") {
+        // 如果是字符串，尝试解析 JSON
+        try {
+          const args = JSON.parse($arguments);
+          prefix = args.prefix || "";
+        } catch {
+          prefix = $arguments; // 直接作为前缀
+        }
       }
     }
-
-    // 如果 prefix 有效，遍历所有节点进行重命名
-    if (prefix && proxies.length) {
-      proxies.forEach(function (proxy) {
-        proxy.name = prefix + proxy.name;
-      });
-    }
   } catch (e) {
-    console.log("[重命名脚本] ERROR: " + e.message);
+    console.log("[Rename] WARN: " + e.message);
+  }
+
+  if (prefix && Array.isArray(proxies)) {
+    proxies = proxies.map(function (proxy) {
+      proxy.name = prefix + proxy.name;
+      return proxy;
+    });
   }
 
   return proxies;
-}
+} 
