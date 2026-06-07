@@ -1,9 +1,3 @@
-// 通用节点名前缀添加脚本
-// Sub-Store 参数：
-//   prefix: 要加的前缀（如：良心云）
-//   sep:    分隔符（可选，默认空格）
-//   sn:     序号分隔符（可选，默认空格）
-
 function operator(proxies) {
   var args = (typeof $arguments !== "undefined") ? $arguments : {};
   var prefix = args.prefix ? decodeURIComponent(args.prefix) : "";
@@ -16,7 +10,6 @@ function operator(proxies) {
     proxies[i].name = prefix + sep + proxies[i].name;
   }
 
-  // 处理重名节点
   var group = {};
   for (var i = 0; i < proxies.length; i++) {
     var name = proxies[i].name;
