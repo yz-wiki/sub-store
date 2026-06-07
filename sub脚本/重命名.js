@@ -1,61 +1,47 @@
-/**
- * 节点名前缀添加脚本 (Sub-Store 脚本操作)
- * 可通过 URL 参数或 $arguments 设置前缀与分隔符。
- * 
- * 参数：
- *   prefix  - 要添加的前缀，例如：良心云
- *   sep     - 分隔符（可选，默认空格）
- *   sn      - 同名节点序号前的连接符（可选，默认空格）
- * 
- * 用法示例：
- *   https://raw.xxx.com/add-prefix.js#prefix=良心云
- *   https://raw.xxx.com/add-prefix.js#prefix=机场A&sep= | &sn=_
- */
+function operator(proxies, targetPlatform, context) {
+  var args = {};
+  try {
+    if (typeof $arguments !== "undefined") args = $arguments;
+  } catch (e) {}
 
-function operator(proxies = [], targetPlatform, context) {
-  // 支持从多个渠道获取参数：$arguments、$options 或链接内嵌参数
-  const args = (typeof $arguments !== "undefined" && $arguments) || {};
-  const prefix = decodeURIComponent(
-    args.prefix || args.PREFIX || ""
-  );
-  const sep = decodeURIComponent(
-    args.sep || args.SEP || " "
-  );
-  const sn = decodeURIComponent(
-    args.sn || args.SN || " "
-  );
+  var prefix = "";
+  if (args.prefix) prefix = decodeURIComponent(args.prefix);
 
-  // 如果没有前缀，直接返回原数组
+  var sep = " ";
+  if (args.sep) sep = decodeURIComponent(args.sep);
+
+  var sn = " ";
+  if (args.sn) sn = decodeURIComponent(args.sn);
+
   if (!prefix) return proxies;
 
-  // 添加前缀
-  for (let p of proxies) {
-    p.name = prefix + sep + p.name;
+  var i;
+  for (i = 0; i < proxies.length; i++) {
+    proxies[i].name = prefix + sep + proxies[i].name;
   }
 
-  // 处理重名节点：在末尾附加序号（如 01, 02）
-  const groups = {};
-  proxies.forEach((p) => {
-    const baseName = p.name;
-    if (!groups[baseName]) groups[baseName] = [];
-    groups[baseName].push(p);
-  });
+  var groups = {};
+  for (i = 0; i < proxies.length; i++) {
+    var name = proxies[i].name;
+    if (!groups[name]) groups[name] = [];
+    groups[name].push(proxies[i]);
+  }
 
-  const result = [];
-  Object.values(groups).forEach((items) => {
+  var result = [];
+  var keys = Object.keys(groups);
+  for (var j = 0; j < keys.length; j++) {
+    var items = groups[keys[j]];
     if (items.length === 1) {
       result.push(items[0]);
     } else {
-      items.forEach((p, idx) => {
-        const num = String(idx + 1).padStart(2, "0");
-        p.name = p.name + sn + num;
-        result.push(p);
-      });
+      for (var k = 0; k < items.length; k++) {
+        var num = k + 1;
+        var numStr = num < 10 ? "0" + num : "" + num;
+        items[k].name = items[k].name + sn + numStr;
+        result.push(items[k]);
+      }
     }
-  });
-
-  // 可选：打印处理信息到日志
-  // console.log(`[PREFIX] 已为 ${result.length} 个节点添加前缀: ${prefix}`);
+  }
 
   return result;
 }
