@@ -1,41 +1,41 @@
-
- * ├─ 参数 (Sub-Store 中按“添加参数”填入)
- *   key: prefix    value: 良心云
- *   key: sep       value:  |       (可选，默认空格)
- *   key: sn        value:  _       (可选，默认空格)
- * 
- * 效果：prefix=良心云 → 良心云 原节点名
- ******************************************/
+// 通用节点名前缀添加脚本
+// Sub-Store 参数：
+//   prefix: 要加的前缀（如：良心云）
+//   sep:    分隔符（可选，默认空格）
+//   sn:     序号分隔符（可选，默认空格）
 
 function operator(proxies) {
-  const args = typeof $arguments !== "undefined" ? $arguments : {};
-  const prefix = args.prefix ? decodeURIComponent(args.prefix) : "";
-  const sep    = args.sep    ? decodeURIComponent(args.sep)    : " ";
-  const sn     = args.sn     ? decodeURIComponent(args.sn)     : " ";
+  var args = (typeof $arguments !== "undefined") ? $arguments : {};
+  var prefix = args.prefix ? decodeURIComponent(args.prefix) : "";
+  var sep = args.sep ? decodeURIComponent(args.sep) : " ";
+  var sn = args.sn ? decodeURIComponent(args.sn) : " ";
 
-  if (!prefix) return proxies;       // 没传 prefix 就不作处理
+  if (!prefix) return proxies;
 
-  // 为每个节点添加前缀
-  for (const p of proxies) {
-    p.name = `${prefix}${sep}${p.name}`;
+  for (var i = 0; i < proxies.length; i++) {
+    proxies[i].name = prefix + sep + proxies[i].name;
   }
 
-  // 处理重名节点 → 自动序号
-  const group = {};
-  for (const p of proxies) {
-    if (!group[p.name]) group[p.name] = [];
-    group[p.name].push(p);
+  // 处理重名节点
+  var group = {};
+  for (var i = 0; i < proxies.length; i++) {
+    var name = proxies[i].name;
+    if (!group[name]) group[name] = [];
+    group[name].push(proxies[i]);
   }
 
-  const result = [];
-  for (const items of Object.values(group)) {
+  var result = [];
+  var keys = Object.keys(group);
+  for (var j = 0; j < keys.length; j++) {
+    var items = group[keys[j]];
     if (items.length === 1) {
       result.push(items[0]);
     } else {
-      items.forEach((p, idx) => {
-        p.name = `${p.name}${sn}${String(idx + 1).padStart(2, "0")}`;
-        result.push(p);
-      });
+      for (var k = 0; k < items.length; k++) {
+        var num = (k + 1).toString();
+        items[k].name = items[k].name + sn + (num.length < 2 ? "0" + num : num);
+        result.push(items[k]);
+      }
     }
   }
   return result;
